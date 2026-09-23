@@ -14,9 +14,15 @@ def get_tokens(user):
 
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
+        if not request.user or not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=401)
         return Response(MeSerializer(request.user).data)
+
     def patch(self, request):
+        if not request.user or not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=401)
         s = MeSerializer(request.user, data=request.data, partial=True)
         s.is_valid(raise_exception=True)
         s.save()
@@ -35,6 +41,7 @@ class CanvasOAuthCallbackView(APIView):
 
     def get(self, request):
         code = request.query_params.get("code", "").strip()
+        redirect_uri = request.query_params.get("redirect_uri", "").strip() or settings.CANVAS_REDIRECT_URI
         error = request.query_params.get("error", "").strip()
 
         # Check for OAuth errors
@@ -66,7 +73,7 @@ class CanvasOAuthCallbackView(APIView):
             "client_secret": settings.CANVAS_CLIENT_SECRET,
             "code": code,
             "grant_type": "authorization_code",
-            "redirect_uri": settings.CANVAS_REDIRECT_URI,
+            "redirect_uri": redirect_uri,
         }
 
         try:

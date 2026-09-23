@@ -3,6 +3,26 @@ from django.db import models
 from django.conf import settings
 
 
+class FormGroup(models.Model):
+    """A named group that forms can be organised into."""
+    name = models.CharField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="form_groups_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Form(models.Model):
     """
     A form definition created by an admin.
@@ -20,6 +40,14 @@ class Form(models.Model):
     public_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     enable_captcha = models.BooleanField(default=False)
+
+    # Optional: organise forms into a group
+    group = models.ForeignKey(
+        FormGroup,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="forms",
+    )
 
     # Optional: link form submissions to a Canvas course for auto-enroll
     canvas_course_id = models.CharField(max_length=64, blank=True, null=True)
@@ -45,6 +73,37 @@ class Form(models.Model):
     @property
     def public_url(self):
         return f"/f/{self.public_token}/"
+
+
+class FormConfigurationList(models.Model):
+    """
+    Reusable global option lists that can be attached to choice fields.
+    """
+
+    name = models.CharField(max_length=120, unique=True)
+    options = models.JSONField(default=list, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="form_config_lists_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="form_config_lists_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class FormField(models.Model):
@@ -90,6 +149,15 @@ class FormField(models.Model):
 
     # JSON list of strings for select/radio/checkbox
     field_options = models.JSONField(default=list, blank=True)
+
+    # Optional reusable source for choice options
+    global_list = models.ForeignKey(
+        FormConfigurationList,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="fields",
+    )
 
     # Maps this field to a Canvas user attribute (e.g. "name", "email")
     canvas_field_mapping = models.CharField(max_length=64, blank=True)

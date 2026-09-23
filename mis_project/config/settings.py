@@ -33,6 +33,8 @@ LOCAL_APPS = [
     "apps.submissions",
     "apps.canvas_integration",
     "apps.audit",
+    "apps.zoom_integration",
+    "apps.notifications",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -122,7 +124,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ── Django REST Framework ──────────────────────────────────────────────────
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
@@ -171,6 +176,11 @@ CANVAS_API_TOKEN = env("CANVAS_API_TOKEN", default="")
 CANVAS_CLIENT_ID = env("CANVAS_CLIENT_ID", default="")
 CANVAS_CLIENT_SECRET = env("CANVAS_CLIENT_SECRET", default="")
 CANVAS_REDIRECT_URI = env("CANVAS_REDIRECT_URI", default="http://localhost:8000/api/auth/canvas/callback/")
+CANVAS_ACCOUNT_ID = env("CANVAS_ACCOUNT_ID", default="")
+CANVAS_ROOT_ACCOUNT_ID = env("CANVAS_ROOT_ACCOUNT_ID", default="")
+CANVAS_FACILITATOR_ENROLLMENT_TYPE = env("CANVAS_FACILITATOR_ENROLLMENT_TYPE", default="TeacherEnrollment")
+CANVAS_FACILITATOR_ROLE_NAME = env("CANVAS_FACILITATOR_ROLE_NAME", default="Facilitator")
+CANVAS_ENROLLMENT_STATE = env("CANVAS_ENROLLMENT_STATE", default="invited")
 
 # ── Email ──────────────────────────────────────────────────────────────────
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
@@ -188,4 +198,11 @@ RECAPTCHA_VERIFY_URL = env(
     "RECAPTCHA_VERIFY_URL",
     default="https://www.google.com/recaptcha/api/siteverify",
 )
+
+# ── Zoom ───────────────────────────────────────────────────────────────────
+ZOOM_ACCOUNT_ID    = env("ZOOM_ACCOUNT_ID",    default="")
+ZOOM_CLIENT_ID     = env("ZOOM_CLIENT_ID",     default="")
+ZOOM_CLIENT_SECRET = env("ZOOM_CLIENT_SECRET", default="")
+ZOOM_HOST_EMAIL    = env("ZOOM_HOST_EMAIL",    default="")
+ZOOM_MOCK          = env.bool("ZOOM_MOCK",     default=False)
 

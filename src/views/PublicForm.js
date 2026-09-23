@@ -174,11 +174,19 @@ function PublicForm() {
       setSubmitError("Please complete the captcha.");
       return;
     }
+    // Priority 1: explicit canvas_field_mapping
     let submitterEmail = "", submitterName = "";
     form.fields.forEach((f) => {
-      if (f.canvas_field_mapping === "email") submitterEmail = values[f.id] || "";
-      if (f.canvas_field_mapping === "name")  submitterName  = values[f.id] || "";
+      if (f.canvas_field_mapping === "email" && !submitterEmail) submitterEmail = values[f.id] || "";
+      if (f.canvas_field_mapping === "name"  && !submitterName)  submitterName  = values[f.id] || "";
     });
+    // Priority 2: field_type === "email" for email; label contains "name" for name
+    if (!submitterEmail || !submitterName) {
+      form.fields.forEach((f) => {
+        if (!submitterEmail && f.field_type === "email") submitterEmail = values[f.id] || "";
+        if (!submitterName  && /\bname\b/i.test(f.label)) submitterName  = values[f.id] || "";
+      });
+    }
     setSubmitting(true);
     try {
       await submitPublicForm({

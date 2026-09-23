@@ -58,7 +58,7 @@ function InfoRow({ icon, label, value }) {
     <div className="d-flex align-items-start py-2 border-bottom">
       <div
         className="d-flex align-items-center justify-content-center rounded-circle mr-3 flex-shrink-0"
-        style={{ width: 36, height: 36, background: "rgba(35,188,188,0.12)", minWidth: 36 }}
+        style={{ width: 36, height: 36, background: "rgba(236, 155, 29, 0.12)", minWidth: 36 }}
       >
         <i className={`${icon} text-info`} style={{ fontSize: 14 }} />
       </div>
@@ -204,7 +204,7 @@ function ProfilePage() {
           <Card className="shadow-sm mb-4">
             <div style={{
               height: 110,
-              background: "linear-gradient(135deg, #23bcbc 0%, #00838f 100%)",
+              background: "linear-gradient(135deg, #f5b041 0%, #d97028 100%)",
               borderRadius: "4px 4px 0 0",
             }} />
 
@@ -216,7 +216,7 @@ function ProfilePage() {
                   className="d-flex align-items-center justify-content-center rounded-circle shadow"
                   style={{
                     width: 90, height: 90,
-                    background: avatarUrl ? "transparent" : "#23bcbc",
+                    background: avatarUrl ? "transparent" : "#EC9B1D",
                     border: "4px solid #fff",
                     overflow: "hidden",
                     flexShrink: 0,

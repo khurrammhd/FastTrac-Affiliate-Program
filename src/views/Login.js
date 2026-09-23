@@ -15,7 +15,10 @@ function Login() {
   const [error, setError]       = useState("");
   const [showPass, setShowPass] = useState(false);
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+  const CANVAS_BASE_URL = process.env.REACT_APP_CANVAS_BASE_URL || "https://fasttrac.test.instructure.com";
+  const CANVAS_CLIENT_ID = process.env.REACT_APP_CANVAS_CLIENT_ID || "197770000000000304";
+  const CANVAS_REDIRECT_URI =
+    process.env.REACT_APP_CANVAS_REDIRECT_URI || `${window.location.origin}/auth/canvas/callback/`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,12 +45,10 @@ function Login() {
 
   const handleCanvasOAuthLogin = () => {
     // Redirect to Canvas OAuth authorization endpoint
-    const clientId = "197770000000000204"; // From Canvas Developer Keys
-    const redirectUri = encodeURIComponent(`${API_URL}/api/auth/canvas/callback/`);
+    const redirectUri = encodeURIComponent(CANVAS_REDIRECT_URI);
     const responseType = "code";
-    const scope = encodeURIComponent("url:GET|POST user_info:read");
-    
-    const canvasAuthUrl = `https://fasttrac.test.instructure.com/login/oauth2/auth?client_id=${clientId}&response_type=${responseType}&redirect_uri=${redirectUri}&scope=${scope}`;
+
+    const canvasAuthUrl = `${CANVAS_BASE_URL}/login/oauth2/auth?client_id=${CANVAS_CLIENT_ID}&response_type=${responseType}&redirect_uri=${redirectUri}`;
     
     window.location.href = canvasAuthUrl;
   };

@@ -6,6 +6,7 @@ import {
   deleteForm,
   publishForm,
   closeForm,
+  cloneForm,
 } from "../api/forms";
 
 const FormsContext = createContext(null);
@@ -58,9 +59,15 @@ export function FormsProvider({ children }) {
     return data;
   }, []);
 
+  const clone = useCallback(async (id) => {
+    const { data } = await cloneForm(id);
+    setForms((prev) => [data, ...prev]);
+    return data;
+  }, []);
+
   return (
     <FormsContext.Provider
-      value={{ forms, loading, error, loadForms, addForm, editForm, removeForm, publish, close }}
+      value={{ forms, loading, error, loadForms, addForm, editForm, removeForm, publish, close, clone }}
     >
       {children}
     </FormsContext.Provider>

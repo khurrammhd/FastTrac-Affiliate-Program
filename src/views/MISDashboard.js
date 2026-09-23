@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, Table, Badge, Alert, Form } from "react-bootstrap";
 import { useAuth } from "context/AuthContext";
-import { fetchForms } from "api/forms";
+import { fetchForms, fetchFormGroups } from "api/forms";
 import { fetchDashboardSummary, fetchSubmissions } from "api/submissions";
 
-const THEME_PRIMARY = "#F76B1C";
-const THEME_SECONDARY = "#9B9EA0";
+const THEME_PRIMARY = "#ec9b1d";
+const THEME_SECONDARY = "#d97028";
 
 const STATUS_VARIANT = {
   pending: "warning", approved: "info", rejected: "danger",
@@ -227,6 +227,117 @@ function TopFormsChart({ items }) {
   );
 }
 
+const GROUP_STATUS_COLORS = {
+  draft: "#9e9e9e",
+  published: "#43a047",
+  closed: "#e53935",
+};
+
+function GroupAnalyticsCard({ groups, forms, allSubmissions }) {
+  // Build per-group stats
+  const stats = useMemo(() => {
+    const formsByGroup = {};
+    groups.forEach((g) => { formsByGroup[g.id] = []; });
+    const ungrouped = [];
+    forms.forEach((f) => {
+      if (f.group && formsByGroup[f.group] !== undefined) {
+        formsByGroup[f.group].push(f);
+      } else {
+        ungrouped.push(f);
+      }
+    });
+
+    const submissionsByForm = {};
+    allSubmissions.forEach((s) => {
+      if (!submissionsByForm[s.form]) submissionsByForm[s.form] = [];
+      submissionsByForm[s.form].push(s);
+    });
+
+    const buildEntry = (label, groupForms) => {
+      const formIds = new Set(groupForms.map((f) => f.id));
+      const subs = allSubmissions.filter((s) => formIds.has(s.form));
+      const pending = subs.filter((s) => s.status === "pending").length;
+      const approved = subs.filter((s) => s.status === "approved" || s.status === "synced").length;
+      const rejected = subs.filter((s) => s.status === "rejected").length;
+      const statusCounts = { draft: 0, published: 0, closed: 0 };
+      groupForms.forEach((f) => { if (statusCounts[f.status] !== undefined) statusCounts[f.status]++; });
+      return { label, formCount: groupForms.length, total: subs.length, pending, approved, rejected, statusCounts };
+    };
+
+    const rows = groups.map((g) => buildEntry(g.name, formsByGroup[g.id] || []));
+    if (ungrouped.length > 0) rows.push(buildEntry("Ungrouped", ungrouped));
+    return rows;
+  }, [groups, forms, allSubmissions]);
+
+  if (stats.length === 0) return null;
+
+  return (
+    <Card>
+      <Card.Header>
+        <Card.Title as="h4">
+          <i className="nc-icon nc-tag-content mr-2" style={{ color: "#43a047" }} />
+          Group Analytics
+        </Card.Title>
+        <p className="card-category">Submission activity and form counts broken down by group</p>
+      </Card.Header>
+      <Card.Body className="p-0">
+        <Table striped hover style={{ marginBottom: 0 }}>
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Forms</th>
+              <th style={{ textAlign: "center" }}>Submissions</th>
+              <th style={{ textAlign: "center" }}>Pending</th>
+              <th style={{ textAlign: "center" }}>Approved / Synced</th>
+              <th style={{ textAlign: "center" }}>Rejected</th>
+              <th>Form statuses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.map((row) => (
+              <tr key={row.label}>
+                <td><strong>{row.label}</strong></td>
+                <td>{row.formCount}</td>
+                <td style={{ textAlign: "center" }}>
+                  <Badge style={{ background: "#ec9b1d", color: "#fff", fontSize: 12, padding: "4px 8px" }}>{row.total}</Badge>
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  {row.pending > 0
+                    ? <Badge variant="warning" style={{ fontSize: 12, padding: "4px 8px" }}>{row.pending}</Badge>
+                    : <span className="text-muted">—</span>}
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  {row.approved > 0
+                    ? <Badge variant="success" style={{ fontSize: 12, padding: "4px 8px" }}>{row.approved}</Badge>
+                    : <span className="text-muted">—</span>}
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  {row.rejected > 0
+                    ? <Badge variant="danger" style={{ fontSize: 12, padding: "4px 8px" }}>{row.rejected}</Badge>
+                    : <span className="text-muted">—</span>}
+                </td>
+                <td>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {Object.entries(row.statusCounts).map(([st, cnt]) => cnt > 0 ? (
+                      <span key={st} style={{
+                        background: GROUP_STATUS_COLORS[st],
+                        color: "#fff", borderRadius: 10, padding: "2px 7px", fontSize: 11,
+                      }}>{cnt} {st}</span>
+                    ) : null)}
+                    {Object.values(row.statusCounts).every((c) => c === 0) && (
+                      <span className="text-muted" style={{ fontSize: 12 }}>—</span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Card.Body>
+    </Card>
+  );
+}
+
 function MISDashboard() {
   const { user, isReviewer, hasPermission } = useAuth();
   const canViewFormsDashboard = hasPermission("view_forms") || Boolean(user);
@@ -235,6 +346,8 @@ function MISDashboard() {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [recent, setRecent] = useState([]);
   const [forms, setForms] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [allSubmissions, setAllSubmissions] = useState([]);
   const [selectedForm, setSelectedForm] = useState("all");
   const [selectedRange, setSelectedRange] = useState(30);
 
@@ -256,6 +369,18 @@ function MISDashboard() {
           setForms([]);
         }
       });
+
+    fetchFormGroups()
+      .then(({ data }) => {
+        if (isCurrent) setGroups(Array.isArray(data) ? data : data?.results || []);
+      })
+      .catch(() => { if (isCurrent) setGroups([]); });
+
+    fetchSubmissions({ page_size: 1000 })
+      .then(({ data }) => {
+        if (isCurrent) setAllSubmissions(data.results ?? data ?? []);
+      })
+      .catch(() => { if (isCurrent) setAllSubmissions([]); });
 
     return () => {
       isCurrent = false;
@@ -479,6 +604,14 @@ function MISDashboard() {
               </ChartCard>
             </Col>
           </Row>
+
+          {groups.length > 0 && (
+            <Row>
+              <Col md={12}>
+                <GroupAnalyticsCard groups={groups} forms={forms} allSubmissions={allSubmissions} />
+              </Col>
+            </Row>
+          )}
         </>
       )}
 

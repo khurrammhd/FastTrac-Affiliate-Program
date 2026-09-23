@@ -16,13 +16,26 @@
 
 */
 import React, { Component } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import { Navbar, Container, Nav, Dropdown, Button } from "react-bootstrap";
+import { useAuth } from "context/AuthContext";
+import { useNotifications } from "context/NotificationsContext";
 
 import routes from "routes.js";
 
+function formatRelativeTime(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60)   return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
 function Header() {
   const location = useLocation();
+  const history = useHistory();
+  const { user, logout } = useAuth();
+  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const mobileSidebarToggle = (e) => {
     e.preventDefault();
     document.documentElement.classList.toggle("nav-open");
@@ -88,41 +101,56 @@ function Header() {
                 variant="default"
                 className="m-0"
               >
-                <i className="nc-icon nc-planet"></i>
-                <span className="notification">5</span>
-                <span className="d-lg-none ml-1">Notification</span>
+                <i className="nc-icon nc-bell-55"></i>
+                {unreadCount > 0 && (
+                  <span className="notification">{unreadCount > 99 ? "99+" : unreadCount}</span>
+                )}
+                <span className="d-lg-none ml-1">Notifications</span>
               </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Notification 1
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Notification 2
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Notification 3
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Notification 4
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Another notification
-                </Dropdown.Item>
+              <Dropdown.Menu style={{ minWidth: 340, maxHeight: 420, overflowY: "auto" }}>
+                <div className="d-flex justify-content-between align-items-center px-3 py-2">
+                  <strong style={{ fontSize: 13 }}>Notifications</strong>
+                  {unreadCount > 0 && (
+                    <button
+                      className="btn btn-link p-0 text-primary"
+                      style={{ fontSize: 12 }}
+                      onClick={(e) => { e.stopPropagation(); markAllRead(); }}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <Dropdown.Divider className="mt-0 mb-0" />
+                {notifications.length === 0 ? (
+                  <Dropdown.Item disabled style={{ fontSize: 13, color: "#aaa" }}>
+                    No notifications
+                  </Dropdown.Item>
+                ) : (
+                  notifications.slice(0, 10).map((n) => (
+                    <Dropdown.Item
+                      key={n.id}
+                      style={{
+                        fontSize: 13,
+                        backgroundColor: n.is_read ? "transparent" : "#f0f7ff",
+                        whiteSpace: "normal",
+                        padding: "10px 16px",
+                        borderBottom: "1px solid #f0f0f0",
+                      }}
+                      onClick={() => {
+                        if (!n.is_read) markRead(n.id);
+                        if (n.submission_id) history.push(`/admin/submissions/${n.submission_id}`);
+                      }}
+                    >
+                      <div style={{ fontWeight: n.is_read ? 400 : 600, color: "#333" }}>
+                        {n.title}
+                      </div>
+                      <div style={{ color: "#555", marginTop: 2 }}>{n.message}</div>
+                      <div style={{ color: "#aaa", fontSize: 11, marginTop: 3 }}>
+                        {formatRelativeTime(n.created_at)}
+                      </div>
+                    </Dropdown.Item>
+                  ))
+                )}
               </Dropdown.Menu>
             </Dropdown>
             <Nav.Item>
@@ -137,70 +165,45 @@ function Header() {
             </Nav.Item>
           </Nav>
           <Nav className="ml-auto" navbar>
-            <Nav.Item>
-              <Nav.Link
-                className="m-0"
-                href="#pablo"
-                onClick={(e) => e.preventDefault()}
-              >
-                <span className="no-icon">Account</span>
-              </Nav.Link>
-            </Nav.Item>
-            <Dropdown as={Nav.Item}>
-              <Dropdown.Toggle
-                aria-expanded={false}
-                aria-haspopup={true}
-                as={Nav.Link}
-                data-toggle="dropdown"
-                id="navbarDropdownMenuLink"
-                variant="default"
-                className="m-0"
-              >
-                <span className="no-icon">Dropdown</span>
-              </Dropdown.Toggle>
-              <Dropdown.Menu aria-labelledby="navbarDropdownMenuLink">
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
+            {user && (
+              <Dropdown as={Nav.Item} align="end">
+                <Dropdown.Toggle
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  as={Nav.Link}
+                  data-toggle="dropdown"
+                  id="userDropdown"
+                  variant="default"
+                  className="m-0"
                 >
-                  Action
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Another action
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Something
-                </Dropdown.Item>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Something else here
-                </Dropdown.Item>
-                <div className="divider"></div>
-                <Dropdown.Item
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Separated link
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-            <Nav.Item>
-              <Nav.Link
-                className="m-0"
-                href="#pablo"
-                onClick={(e) => e.preventDefault()}
-              >
-                <span className="no-icon">Log out</span>
-              </Nav.Link>
-            </Nav.Item>
+                  <i className="nc-icon nc-single-02"></i>
+                  <span className="no-icon d-lg-inline ml-2">{user?.first_name || user?.username}</span>
+                </Dropdown.Toggle>
+                <Dropdown.Menu aria-labelledby="userDropdown">
+                  <Dropdown.Item
+                    href="/admin/profile"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      history.push("/admin/profile");
+                    }}
+                  >
+                    <i className="nc-icon nc-preferences mr-2"></i>
+                    View Profile
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item
+                    onClick={(e) => {
+                      e.preventDefault();
+                      logout();
+                      history.push("/login");
+                    }}
+                  >
+                    <i className="nc-icon nc-button-pause mr-2"></i>
+                    Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>

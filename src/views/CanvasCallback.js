@@ -21,12 +21,17 @@ function CanvasCallback() {
     const params = new URLSearchParams(location.search);
     const code = params.get("code");
     const error = params.get("error");
+    const errorDescription = params.get("error_description");
 
-    console.log("📦 URL Parameters:", { code: code ? "✓ present" : "✗ missing", error: error ? "✓ present" : "✗ missing" });
+    console.log("📦 URL Parameters:", {
+      code: code ? "✓ present" : "✗ missing",
+      error: error ? "✓ present" : "✗ missing",
+      errorDescription,
+    });
 
     if (error) { 
-      console.error("❌ Canvas returned error:", error);
-      setErrorMsg("Canvas login was cancelled or denied."); 
+      console.error("❌ Canvas returned error:", { error, errorDescription });
+      setErrorMsg(errorDescription || `Canvas OAuth error: ${error}`); 
       return; 
     }
     if (!code)  { 
@@ -35,12 +40,14 @@ function CanvasCallback() {
       return; 
     }
 
-    const BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+    const BASE = (process.env.REACT_APP_API_URL || window.location.origin).trim();
+    const redirectUri =
+      process.env.REACT_APP_CANVAS_REDIRECT_URI || `${window.location.origin}/auth/canvas/callback/`;
     console.log("🌐 API Base URL:", BASE);
     console.log("📡 Making callback request to:", `${BASE}/api/auth/canvas/callback/`);
     
     axios
-      .get(`${BASE}/api/auth/canvas/callback/`, { params: { code } })
+      .get(`${BASE}/api/auth/canvas/callback/`, { params: { code, redirect_uri: redirectUri } })
       .then(({ data }) => {
         console.log("✅ Canvas callback response received:", data);
         

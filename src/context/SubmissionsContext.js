@@ -2,9 +2,12 @@ import { createContext, useContext, useState, useCallback } from "react";
 import {
   fetchSubmissions,
   fetchSubmission,
+  deleteSubmission,
   approveSubmission,
   rejectSubmission,
+  unrejectSubmission,
   addSubmissionNote,
+  removeSubmissionUser,
 } from "../api/submissions";
 
 const SubmissionsContext = createContext(null);
@@ -41,20 +44,30 @@ export function SubmissionsProvider({ children }) {
     return data;
   }, []);
 
-  const _updateInList = (id, patch) =>
-    setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const normalizeId = (value) => Number(value);
 
-  const approve = useCallback(async (id, note) => {
-    const { data } = await approveSubmission(id, { note });
+  const _updateInList = (id, patch) =>
+    setSubmissions((prev) => prev.map((s) => (normalizeId(s.id) === normalizeId(id) ? { ...s, ...patch } : s)));
+
+  const approve = useCallback(async (id, payload = {}) => {
+    const requestPayload = typeof payload === "string" ? { note: payload } : (payload || {});
+    const { data } = await approveSubmission(id, requestPayload);
     _updateInList(id, data);
-    if (current?.id === id) setCurrent(data);
+    if (normalizeId(current?.id) === normalizeId(id)) setCurrent(data);
     return data;
   }, [current]);
 
   const reject = useCallback(async (id, reason) => {
     const { data } = await rejectSubmission(id, reason);
     _updateInList(id, data);
-    if (current?.id === id) setCurrent(data);
+    if (normalizeId(current?.id) === normalizeId(id)) setCurrent(data);
+    return data;
+  }, [current]);
+
+  const unreject = useCallback(async (id) => {
+    const { data } = await unrejectSubmission(id);
+    _updateInList(id, data);
+    if (normalizeId(current?.id) === normalizeId(id)) setCurrent(data);
     return data;
   }, [current]);
 
@@ -66,11 +79,26 @@ export function SubmissionsProvider({ children }) {
     return data;
   }, [current]);
 
+  const removeSubmission = useCallback(async (id) => {
+    await deleteSubmission(id);
+    setSubmissions((prev) => prev.filter((s) => normalizeId(s.id) !== normalizeId(id)));
+    if (normalizeId(current?.id) === normalizeId(id)) {
+      setCurrent(null);
+    }
+  }, [current]);
+
+  const removeCanvasUser = useCallback(async (id) => {
+    const { data } = await removeSubmissionUser(id);
+    _updateInList(id, data);
+    if (normalizeId(current?.id) === normalizeId(id)) setCurrent(data);
+    return data;
+  }, [current]);
+
   return (
     <SubmissionsContext.Provider
       value={{
         submissions, current, loading, error, pagination,
-        loadSubmissions, loadSubmission, approve, reject, addNote,
+        loadSubmissions, loadSubmission, approve, reject, unreject, addNote, removeSubmission, removeCanvasUser,
       }}
     >
       {children}

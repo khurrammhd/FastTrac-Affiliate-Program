@@ -38,6 +38,10 @@ class Submission(models.Model):
     canvas_enrollment_id = models.CharField(max_length=64, blank=True, null=True)
     canvas_sync_error = models.TextField(blank=True)
     canvas_synced_at = models.DateTimeField(null=True, blank=True)
+    # True: Canvas account existed before this course-enrollment sync (keep account on removal).
+    # False: Canvas account was created as part of this sync (safe to delete on removal).
+    # Null: unknown — treated as "keep account" for safety.
+    canvas_user_precreated = models.BooleanField(null=True, blank=True, default=None)
 
     # Submitter contact (extracted from form data for quick reference)
     submitter_email = models.EmailField(blank=True)

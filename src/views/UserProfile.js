@@ -25,10 +25,10 @@ function Avatar({ user, size = 80 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "linear-gradient(135deg,#26c6da,#00838f)",
+      background: "linear-gradient(135deg, #f5b041, #d97028)",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.35, fontWeight: 600, color: "#fff",
-      border: "3px solid #26c6da",
+      border: "3px solid #ec9b1d",
     }}>
       {initials}
     </div>

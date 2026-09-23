@@ -19,7 +19,9 @@ class AuditLog(models.Model):
         # Submissions
         SUB_APPROVED   = "sub_approved",   "Submission approved"
         SUB_REJECTED   = "sub_rejected",   "Submission rejected"
+        SUB_UNREJECTED = "sub_unrejected", "Submission rejection reverted"
         SUB_RESYNCED   = "sub_resynced",   "Submission re-synced"
+        SUB_USER_REMOVED = "sub_user_removed", "User removed from Canvas"
         # Canvas
         CANVAS_SYNCED  = "canvas_synced",  "Canvas sync succeeded"
         CANVAS_FAILED  = "canvas_failed",  "Canvas sync failed"

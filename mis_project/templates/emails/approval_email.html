@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Approved – Kauffman FastTrac®</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F2EDE8;font-family:Arial,Helvetica,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2EDE8;padding:36px 0 48px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:0;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.10);">
+
+          <!-- Top logo bar -->
+          <tr>
+            <td style="background:#ffffff;padding:22px 40px 18px;border-bottom:3px solid #E05714;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size:9px;font-weight:700;letter-spacing:3px;color:#2D2926;text-transform:uppercase;line-height:1;">KAUFFMAN</div>
+                    <div style="font-size:26px;font-weight:900;letter-spacing:1px;line-height:1.1;margin-top:1px;">
+                      <span style="color:#2D2926;">FAST</span><span style="color:#E05714;">TRAC</span><span style="color:#E05714;font-size:16px;vertical-align:super;font-weight:700;">&#174;</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Orange approval banner -->
+          <tr>
+            <td style="background:#E05714;padding:18px 40px;text-align:center;">
+              <span style="display:inline-block;background:rgba(255,255,255,0.18);color:#ffffff;font-size:12px;font-weight:700;padding:6px 20px;letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.4);">
+                &#10003;&nbsp;&nbsp;Application Approved
+              </span>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px 28px;">
+              <p style="margin:0 0 18px;font-size:16px;color:#2D2926;line-height:1.5;">
+                Dear <strong>{{ name }}</strong>,
+              </p>
+              <p style="margin:0 0 20px;font-size:15px;color:#3D3D3D;line-height:1.7;">
+                Congratulations! Your application for
+                <strong style="color:#E05714;">{{ form_title }}</strong>
+                has been <strong>approved</strong>.
+                We are pleased to confirm your registration and look forward to having you participate in the program.
+              </p>
+
+              {% if join_url %}
+              <!-- Zoom section -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;border:2px solid #E05714;overflow:hidden;">
+                <tr>
+                  <td style="background:#E05714;padding:12px 20px;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-right:10px;vertical-align:middle;">
+                          <span style="font-size:20px;">&#128249;</span>
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <strong style="font-size:14px;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">Zoom Session</strong>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 16px;font-size:14px;color:#3D3D3D;line-height:1.6;">
+                      Click the button below to join the virtual session.
+                      Please keep this link private and do not share it with others.
+                    </p>
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <a href="{{ join_url }}"
+                             style="display:inline-block;background:#E05714;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:13px 30px;letter-spacing:0.5px;text-transform:uppercase;">
+                            Join Zoom Meeting &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:14px 0 0;font-size:12px;color:#888888;word-break:break-all;">
+                      Or copy this link: <a href="{{ join_url }}" style="color:#E05714;">{{ join_url }}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+
+              {% if has_schedule %}
+              <!-- Meeting Schedule section -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;border:2px solid #2D2926;overflow:hidden;">
+                <tr>
+                  <td style="background:#2D2926;padding:12px 20px;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-right:10px;vertical-align:middle;">
+                          <span style="font-size:18px;">&#128197;</span>
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <strong style="font-size:14px;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">Meeting Schedule</strong>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px;">
+                    {% for day in schedule_days %}
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:{% if not forloop.last %}16px{% else %}0{% endif %};">
+                      <tr>
+                        <td style="width:30px;vertical-align:top;padding-top:2px;">
+                          <span style="display:inline-block;background:#E05714;color:#fff;font-size:10px;font-weight:700;width:24px;height:24px;text-align:center;line-height:24px;">{{ day.day_number }}</span>
+                        </td>
+                        <td style="padding-left:12px;vertical-align:top;">
+                          <div style="font-size:14px;font-weight:700;color:#2D2926;">{{ day.formatted_date }}</div>
+                          <div style="font-size:13px;color:#555555;margin-top:2px;">
+                            {{ day.formatted_start }} &ndash; {{ day.formatted_end }}
+                          </div>
+                          {% if day.google_calendar_url %}
+                          <div style="margin-top:6px;">
+                            <a href="{{ day.google_calendar_url }}"
+                               target="_blank"
+                               style="display:inline-block;font-size:11px;color:#E05714;text-decoration:none;border:1px solid #E05714;padding:3px 9px;white-space:nowrap;font-weight:700;letter-spacing:0.5px;">
+                              &#43;&nbsp;Google Calendar
+                            </a>
+                          </div>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    </table>
+                    {% endfor %}
+                    <p style="margin:18px 0 0;font-size:12px;color:#888888;border-top:2px solid #F2EDE8;padding-top:14px;">
+                      &#128204;&nbsp;<strong>Outlook / Apple Calendar:</strong>
+                      Open the <strong>.ics</strong> file attached to this email to add all sessions to your calendar at once.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+
+              <p style="margin:0 0 8px;font-size:14px;color:#555555;line-height:1.7;">
+                If you have any questions or need assistance, please reply to this email and
+                our team will get back to you as soon as possible.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Warm divider band -->
+          <tr>
+            <td style="background:#F2EDE8;padding:20px 40px;border-top:3px solid #E05714;">
+              <p style="margin:0;font-size:13px;color:#2D2926;line-height:1.6;">
+                <strong>Kauffman FastTrac&#174;</strong> equips aspiring entrepreneurs with the business
+                skills, tools, resources, and peer networks necessary to start and grow
+                successful businesses.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#2D2926;padding:24px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">
+                The FastTrac Team
+              </p>
+              <p style="margin:0 0 14px;font-size:12px;color:rgba(255,255,255,0.6);">
+                <a href="https://www.fasttrac.org" style="color:#E05714;text-decoration:none;">www.fasttrac.org</a>
+              </p>
+              <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6;">
+                &copy; Copyright 2026 Ewing Marion Kauffman Foundation. All Rights Reserved.<br/>
+                This is an automated message &mdash; please do not reply directly to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

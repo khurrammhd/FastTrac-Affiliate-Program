@@ -4,20 +4,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import CanManageForms, IsReviewerOrAbove
-from .models import Form, FormField
-from .serializers import FormSerializer, FormWriteSerializer, FormFieldSerializer, PublicFormSerializer
-
-from rest_framework.permissions import AllowAny
-from rest_framework.viewsets import ModelViewSet
-
-# Monkey-patch default for this module
-ModelViewSet.permission_classes = [AllowAny]
-ModelViewSet.authentication_classes = []
+from .models import Form, FormField, FormConfigurationList, FormGroup
+from .serializers import (
+    FormSerializer,
+    FormWriteSerializer,
+    FormFieldSerializer,
+    PublicFormSerializer,
+    FormConfigurationListSerializer,
+    FormGroupSerializer,
+)
 
 class FormListCreateView(generics.ListCreateAPIView):
-    queryset = Form.objects.all()
-    permission_classes = [AllowAny]
-    authentication_classes = [] 
+    queryset = Form.objects.order_by("-updated_at", "-created_at")
 
     def get_permissions(self):
         if self.request.method == "GET":
@@ -72,6 +70,52 @@ class FormCloseView(APIView):
         return Response(FormSerializer(form).data)
 
 
+class FormCloneView(APIView):
+    permission_classes = [permissions.IsAuthenticated, CanManageForms]
+
+    def post(self, request, pk):
+        try:
+            original = Form.objects.get(pk=pk)
+        except Form.DoesNotExist:
+            return Response({"error": "Form not found."}, status=404)
+
+        # Build a unique slug: "<original-slug>-copy", then "-copy-2", "-copy-3", …
+        base_slug = f"{original.slug}-copy"
+        candidate = base_slug
+        counter = 2
+        while Form.objects.filter(slug=candidate).exists():
+            candidate = f"{base_slug}-{counter}"
+            counter += 1
+
+        clone = Form.objects.create(
+            title=f"Copy of {original.title}",
+            description=original.description,
+            slug=candidate,
+            status=Form.Status.DRAFT,
+            enable_captcha=original.enable_captcha,
+            canvas_course_id=original.canvas_course_id,
+            canvas_course_name=original.canvas_course_name,
+            created_by=request.user,
+        )
+
+        # Copy all fields
+        for field in original.fields.order_by("order"):
+            FormField.objects.create(
+                form=clone,
+                label=field.label,
+                field_type=field.field_type,
+                placeholder=field.placeholder,
+                help_text=field.help_text,
+                is_required=field.is_required,
+                order=field.order,
+                field_options=field.field_options,
+                canvas_field_mapping=field.canvas_field_mapping,
+                global_list=field.global_list,
+            )
+
+        return Response(FormSerializer(clone).data, status=status.HTTP_201_CREATED)
+
+
 class FormFieldListCreateView(generics.ListCreateAPIView):
     serializer_class = FormFieldSerializer
 
@@ -98,6 +142,30 @@ class FormFieldDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return FormField.objects.filter(form_id=self.kwargs["form_pk"])
+
+
+class FormConfigurationListCreateView(generics.ListCreateAPIView):
+    serializer_class = FormConfigurationListSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated(), IsReviewerOrAbove()]
+        return [permissions.IsAuthenticated(), CanManageForms()]
+
+    def get_queryset(self):
+        return FormConfigurationList.objects.order_by("name")
+
+
+class FormConfigurationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FormConfigurationListSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated(), IsReviewerOrAbove()]
+        return [permissions.IsAuthenticated(), CanManageForms()]
+
+    def get_queryset(self):
+        return FormConfigurationList.objects.all()
 
 
 # ── Public (no auth) ──────────────────────────────────────────────────────
@@ -160,3 +228,23 @@ class FormVersionRestoreView(APIView):
                 if k not in ("id", "form")
             })
         return Response(FormSerializer(form).data)
+
+
+class FormGroupListCreateView(generics.ListCreateAPIView):
+    queryset = FormGroup.objects.all()
+    serializer_class = FormGroupSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated(), IsReviewerOrAbove()]
+        return [permissions.IsAuthenticated(), CanManageForms()]
+
+
+class FormGroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = FormGroup.objects.all()
+    serializer_class = FormGroupSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated(), IsReviewerOrAbove()]
+        return [permissions.IsAuthenticated(), CanManageForms()]

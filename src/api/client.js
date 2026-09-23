@@ -41,6 +41,11 @@ client.interceptors.response.use(
             refresh,
           });
           localStorage.setItem("access_token", data.access);
+          // When ROTATE_REFRESH_TOKENS=True the server returns a new refresh
+          // token — save it so subsequent refreshes don't fail.
+          if (data.refresh) {
+            localStorage.setItem("refresh_token", data.refresh);
+          }
           original.headers.Authorization = `Bearer ${data.access}`;
           return client(original);
         } catch {

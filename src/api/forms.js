@@ -22,6 +22,9 @@ export const publishForm = (id) =>
 export const closeForm = (id) =>
   client.post(`/api/forms/${id}/close/`);
 
+export const cloneForm = (id) =>
+  client.post(`/api/forms/${id}/clone/`);
+
 // ── Fields ─────────────────────────────────────────────────────────────────
 export const fetchFields = (formId) =>
   client.get(`/api/forms/${formId}/fields/`);
@@ -41,3 +44,29 @@ export const fetchPublicForm = (token) =>
 
 export const submitPublicForm = (data) =>
   client.post("/api/submissions/submit/", data);
+
+// ── Form configurations (global reusable option lists) ─────────────────────
+export const fetchConfigurationLists = () =>
+  client.get("/api/forms/configurations/lists/");
+
+export const createConfigurationList = (data) =>
+  client.post("/api/forms/configurations/lists/", data);
+
+export const updateConfigurationList = (id, data) =>
+  client.patch(`/api/forms/configurations/lists/${id}/`, data);
+
+export const deleteConfigurationList = (id) =>
+  client.delete(`/api/forms/configurations/lists/${id}/`);
+
+// ── Form groups ────────────────────────────────────────────────────────────
+export const fetchFormGroups = () =>
+  client.get("/api/forms/groups/");
+
+export const createFormGroup = (data) =>
+  client.post("/api/forms/groups/", data);
+
+export const updateFormGroup = (id, data) =>
+  client.patch(`/api/forms/groups/${id}/`, data);
+
+export const deleteFormGroup = (id) =>
+  client.delete(`/api/forms/groups/${id}/`);

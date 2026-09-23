@@ -18,6 +18,7 @@ import CanvasCallback from "views/CanvasCallback.js";
 import { AuthProvider }        from "context/AuthContext";
 import { FormsProvider }       from "context/FormsContext";
 import { SubmissionsProvider } from "context/SubmissionsContext";
+import { NotificationsProvider } from "context/NotificationsContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -26,8 +27,9 @@ root.render(
     <AuthProvider>
       <FormsProvider>
         <SubmissionsProvider>
-          <ToastContainer />
-          <Switch>
+          <NotificationsProvider>
+            <ToastContainer />
+            <Switch>
             {/* Public routes - no auth, no sidebar */}
             <Route exact path="/login"              component={Login} />
             <Route path="/auth/canvas/callback"     component={CanvasCallback} />
@@ -38,7 +40,8 @@ root.render(
 
             {/* Default redirect */}
             <Redirect from="/" to="/admin/mis-dashboard" />
-          </Switch>
+            </Switch>
+          </NotificationsProvider>
         </SubmissionsProvider>
       </FormsProvider>
     </AuthProvider>
